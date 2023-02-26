@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="79ab965e-7642-477c-b6a9-bdabdb759b37" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="w4a-send-data-parallelFlow" doc:id="8c485237-952c-4ea5-8124-ed75ba643a04" >
+		<http:listener doc:name="Listener" doc:id="b83310e4-8f91-4e41-add7-8b2712294dd2" config-ref="HTTP_Listener_config" path="/sentDataParallel"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="3fbf19e2-8f51-4b5e-bd9e-03cee7ca2952" >
+			<route >
+				<ee:transform doc:name="to CSV" doc:id="bc60e4f1-e085-4f29-b106-f9fa8e2bbcf5" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv header=false
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<file:write doc:name="Write CSV" doc:id="99e964a2-cefb-4117-a392-564db3d148eb" path="C:\Users\Natey\Documents\training\w4a-parallel\output\parallel.csv" mode="APPEND"/>
+			</route>
+			<route >
+				<ee:transform doc:name="to JSON" doc:id="e20d38ae-8485-4f81-97b8-18ee801910a9" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<file:write doc:name="Write JSON" doc:id="2ea5ac9d-b2f6-4747-b696-1faf108e539a" path="C:\Users\Natey\Documents\training\w4a-parallel\output\parallel.json" mode="APPEND"/>
+			</route>
+		</scatter-gather>
+		<logger level="INFO" doc:name="Logger" doc:id="9cd7a528-fdb8-4d17-a6b9-791fa91f5bc9" />
+		<ee:transform doc:name="Transform Message" doc:id="463ce486-ac3c-449f-b3e5-d9116221f26e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	'message': 'parallel data sent successfully'
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
